@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 
-const API_BASE = 'http://localhost:5000';
+export const API_BASE = 'http://localhost:5000';
 
 export interface Suggestion {
   id: string;
@@ -158,7 +158,12 @@ export function useApplications() {
     file: File,
     jobTitle: string,
     company: string,
-    jobDescription: string
+    jobDescription: string,
+    jobPostingDate?: string,
+    deadline?: string,
+    jobLink?: string,
+    referralName?: string,
+    referralEmail?: string
   ) => {
     setLoading(true);
     setGatingError(null);
@@ -168,18 +173,23 @@ export function useApplications() {
     formData.append('company', company || 'Company');
     formData.append('jobDescriptionText', jobDescription);
     formData.append('email', 'guest@jobwingman.local');
+    if (jobPostingDate) formData.append('jobPostingDate', jobPostingDate);
+    if (deadline) formData.append('deadline', deadline);
+    if (jobLink) formData.append('jobLink', jobLink);
+    if (referralName) formData.append('referralName', referralName);
+    if (referralEmail) formData.append('referralEmail', referralEmail);
 
     try {
-      // Post directly to Remix action gateway at root "/"
-      const res = await fetch("/", {
+      // Post directly to Remix action gateway at root "/?index"
+      const res = await fetch("/?index", {
         method: 'POST',
         body: formData
       });
       if (res.ok) {
         const newApp = await res.json();
-        const updatedApps = await fetchApplications();
+        await fetchApplications();
         await loadApplication(newApp.id);
-        return true;
+        return newApp;
       } else if (res.status === 422) {
         const errData = await res.json();
         setGatingError({
@@ -197,7 +207,7 @@ export function useApplications() {
     } finally {
       setLoading(false);
     }
-    return false;
+    return null;
   };
 
   const handleSaveResume = async () => {
@@ -314,6 +324,30 @@ export function useApplications() {
     return false;
   };
 
+  const handleUpdateApplication = async (id: string, updates: { status?: string; appliedAt?: string; downloadedAt?: string }) => {
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/applications/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates)
+      });
+      if (res.ok) {
+        const updatedApp = await res.json();
+        if (selectedApp && selectedApp.id === id) {
+          setSelectedApp(updatedApp);
+        }
+        await fetchApplications();
+        return updatedApp;
+      }
+    } catch (err) {
+      console.error('Error updating application:', err);
+    } finally {
+      setLoading(false);
+    }
+    return null;
+  };
+
   return {
     applications,
     selectedApp,
@@ -328,6 +362,7 @@ export function useApplications() {
     handleSaveResume,
     handleCommitSuggestion,
     handleApply,
+    handleUpdateApplication,
     gatingError,
     setGatingError
   };
