@@ -82,6 +82,27 @@ export default function JobApplicationWizard({
   // Modal State
   const [showApplyModal, setShowApplyModal] = useState(false);
   const [evaluationError, setEvaluationError] = useState<string | null>(null);
+  const [loadingText, setLoadingText] = useState('Parsing resume contents...');
+
+  useEffect(() => {
+    if (!loading) return;
+    const phrases = [
+      'Ingesting resume file...',
+      'Extracting profile metadata...',
+      'Comparing with job description...',
+      'Auditing skills match...',
+      'Running AI-alignment check...',
+      'Generating suggestions checklist...',
+      'Calculating match score...',
+    ];
+    let idx = 0;
+    setLoadingText(phrases[0]);
+    const interval = setInterval(() => {
+      idx = (idx + 1) % phrases.length;
+      setLoadingText(phrases[idx]);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [loading]);
 
   // Sync state if selectedApp changes (e.g. resuming an application)
   useEffect(() => {
@@ -388,26 +409,60 @@ export default function JobApplicationWizard({
               <p className="text-xs text-gray-400">Provide your base resume to evaluate against target requirements.</p>
             </div>
 
-            <div className="py-6 flex flex-col items-center justify-center border-2 border-dashed border-border rounded-2xl bg-background/50 hover:bg-background transition-all group relative min-h-[220px]">
-              <input 
-                type="file" 
-                accept=".pdf,.docx,.txt" 
-                className="absolute inset-0 opacity-0 cursor-pointer" 
-                onChange={handleFileUpload} 
-                disabled={loading}
-              />
-              <div className="flex flex-col items-center text-center space-y-3 p-4">
-                <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20 group-hover:scale-105 transition-transform">
-                  <FileText className="h-6 w-6 text-primary" />
+            {loading ? (
+              <div className="py-8 flex flex-col items-center justify-center border border-primary/20 rounded-2xl bg-background/40 relative min-h-[220px] overflow-hidden space-y-5">
+                <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-secondary/5 to-primary/5 animate-pulse" />
+                
+                {/* Radar/Alignment Scanner Graphic */}
+                <div className="relative flex items-center justify-center h-16 w-16">
+                  {/* Outer breathing ring */}
+                  <div className="absolute inset-0 rounded-full border border-primary/30 animate-ping opacity-75" />
+                  {/* Middle rotating ring */}
+                  <div className="absolute h-12 w-12 rounded-full border border-dashed border-secondary/50 animate-spin" />
+                  {/* Inner pulse */}
+                  <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-primary to-secondary flex items-center justify-center shadow-lg shadow-primary-glow animate-pulse">
+                    <RefreshCw className="h-4 w-4 text-white animate-spin [animation-duration:3s]" />
+                  </div>
                 </div>
-                <div>
-                  <p className="text-xs text-white font-semibold">
-                    {resumeFile ? resumeFile.name : 'Drag & Drop or Click to Select File'}
+
+                <div className="text-center z-10 space-y-1.5 px-4">
+                  <p className="text-xs text-white font-bold tracking-wide">
+                    Analyzing Resume Alignment
                   </p>
-                  <p className="text-[10px] text-gray-500 mt-1">Supports PDF, DOCX, or plain text resumes</p>
+                  <p className="text-[10px] text-gray-400 max-w-xs mx-auto animate-pulse min-h-[14px]">
+                    {loadingText}
+                  </p>
+                </div>
+
+                {/* Progress bar simulation */}
+                <div className="w-48 h-1 bg-border rounded-full overflow-hidden relative">
+                  <div className="h-full bg-gradient-to-r from-primary to-secondary absolute top-0 left-0 rounded-full w-full">
+                    <div className="shimmer-progress" />
+                  </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              <div className="py-6 flex flex-col items-center justify-center border-2 border-dashed border-border rounded-2xl bg-background/50 hover:bg-background transition-all group relative min-h-[220px]">
+                <input 
+                  type="file" 
+                  accept=".pdf,.docx,.txt" 
+                  className="absolute inset-0 opacity-0 cursor-pointer" 
+                  onChange={handleFileUpload} 
+                  disabled={loading}
+                />
+                <div className="flex flex-col items-center text-center space-y-3 p-4">
+                  <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20 group-hover:scale-105 transition-transform">
+                    <FileText className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-white font-semibold">
+                      {resumeFile ? resumeFile.name : 'Drag & Drop or Click to Select File'}
+                    </p>
+                    <p className="text-[10px] text-gray-500 mt-1">Supports PDF, DOCX, or plain text resumes</p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {evaluationError && (
               <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 p-3 rounded-xl text-xs flex items-center gap-2">
