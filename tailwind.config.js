@@ -15,5 +15,10 @@ export default {
       }
     },
   },
-  plugins: [],
+  plugins: [
+    require('daisyui'),
+  ],
+  daisyui: {
+    themes: ["dracula", "forest", "dark", "dim", "synthwave", "nord"],
+  }
 }

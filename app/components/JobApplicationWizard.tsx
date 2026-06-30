@@ -1,18 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Briefcase, 
-  Upload, 
-  Award, 
-  Edit3, 
-  Eye, 
-  ArrowRight, 
-  ArrowLeft, 
-  CheckCircle, 
-  Calendar, 
-  Link, 
-  User, 
-  Mail, 
-  FileText, 
+import {
+  Briefcase,
+  Upload,
+  Award,
+  Edit3,
+  Eye,
+  ArrowRight,
+  ArrowLeft,
+  CheckCircle,
+  Calendar,
+  Link,
+  User,
+  Mail,
+  FileText,
   AlertTriangle,
   RefreshCw,
   Download,
@@ -111,19 +111,19 @@ export default function JobApplicationWizard({
       setCompany(selectedApp.jobDescription?.company || '');
       setJobDescription(selectedApp.jobDescription?.rawText || '');
       setJobPostingDate(
-        selectedApp.jobDescription?.postingDate 
-          ? new Date(selectedApp.jobDescription.postingDate).toISOString().split('T')[0] 
+        selectedApp.jobDescription?.postingDate
+          ? new Date(selectedApp.jobDescription.postingDate).toISOString().split('T')[0]
           : ''
       );
       setDeadline(
-        selectedApp.jobDescription?.deadline 
-          ? new Date(selectedApp.jobDescription.deadline).toISOString().split('T')[0] 
+        selectedApp.jobDescription?.deadline
+          ? new Date(selectedApp.jobDescription.deadline).toISOString().split('T')[0]
           : ''
       );
       setJobLink(selectedApp.jobDescription?.url || '');
       setReferralName(selectedApp.jobDescription?.referralName || '');
       setReferralEmail(selectedApp.jobDescription?.referralEmail || '');
-      
+
       // Auto-advance step if we are loading an existing evaluated application
       if (step < 3) {
         setStep(3);
@@ -205,10 +205,10 @@ export default function JobApplicationWizard({
 
   const handleDownload = async () => {
     if (!selectedApp) return;
-    
+
     // Set downloaded timestamp
     await handleUpdateApplication(selectedApp.id, { downloadedAt: new Date().toISOString() });
-    
+
     // Open compile URL in new tab to trigger browser download
     const pdfUrl = `${API_BASE}/api/applications/${selectedApp.id}/compile-pdf?cb=${pdfCacheBuster}`;
     window.open(pdfUrl, '_blank');
@@ -239,14 +239,13 @@ export default function JobApplicationWizard({
             return (
               <React.Fragment key={s.id}>
                 <div className="flex flex-col items-center space-y-1 flex-1">
-                  <div 
-                    className={`h-8 w-8 rounded-lg flex items-center justify-center border transition-all ${
-                      isActive 
-                        ? 'bg-primary border-primary text-white shadow-md shadow-primary-glow' 
+                  <div
+                    className={`h-8 w-8 rounded-lg flex items-center justify-center border transition-all ${isActive
+                        ? 'bg-primary border-primary text-white shadow-md shadow-primary-glow'
                         : isCompleted
                           ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400'
                           : 'bg-background border-border text-gray-500'
-                    }`}
+                      }`}
                   >
                     {isCompleted ? <CheckCircle className="h-4 w-4" /> : <Icon className="h-4 w-4" />}
                   </div>
@@ -285,20 +284,20 @@ export default function JobApplicationWizard({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-gray-300">Job Title *</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     placeholder="e.g. Senior Frontend Engineer"
-                    value={jobTitle} 
+                    value={jobTitle}
                     onChange={(e) => setJobTitle(e.target.value)}
                     className="w-full bg-background border border-border rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-primary transition-colors"
                   />
                 </div>
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-gray-300">Company *</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     placeholder="e.g. Google"
-                    value={company} 
+                    value={company}
                     onChange={(e) => setCompany(e.target.value)}
                     className="w-full bg-background border border-border rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-primary transition-colors"
                   />
@@ -306,13 +305,13 @@ export default function JobApplicationWizard({
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-gray-300">Job Description Requirements *</label>
-                <textarea 
-                  rows={6}
+                <label className="text-xs font-semibold text-gray-300">Job Description *</label>
+                <textarea
+                  rows={12}
                   placeholder="Paste the core requirements, skill lists, and roles..."
                   value={jobDescription}
                   onChange={(e) => setJobDescription(e.target.value)}
-                  className="w-full bg-background border border-border rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-primary transition-colors resize-none"
+                  className="w-full bg-background border border-border rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-primary transition-colors resize-y min-h-[300px]"
                 />
               </div>
 
@@ -322,9 +321,9 @@ export default function JobApplicationWizard({
                     <Calendar className="h-3.5 w-3.5 text-gray-500" />
                     Posting Date
                   </label>
-                  <input 
-                    type="date" 
-                    value={jobPostingDate} 
+                  <input
+                    type="date"
+                    value={jobPostingDate}
                     onChange={(e) => setJobPostingDate(e.target.value)}
                     className="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-primary"
                   />
@@ -334,9 +333,9 @@ export default function JobApplicationWizard({
                     <Calendar className="h-3.5 w-3.5 text-gray-500" />
                     Deadline
                   </label>
-                  <input 
-                    type="date" 
-                    value={deadline} 
+                  <input
+                    type="date"
+                    value={deadline}
                     onChange={(e) => setDeadline(e.target.value)}
                     className="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-primary"
                   />
@@ -346,10 +345,10 @@ export default function JobApplicationWizard({
                     <Link className="h-3.5 w-3.5 text-gray-500" />
                     Job Link
                   </label>
-                  <input 
-                    type="url" 
+                  <input
+                    type="url"
                     placeholder="https://company.com/careers/123"
-                    value={jobLink} 
+                    value={jobLink}
                     onChange={(e) => setJobLink(e.target.value)}
                     className="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-primary"
                   />
@@ -364,20 +363,20 @@ export default function JobApplicationWizard({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <label className="text-[11px] font-semibold text-gray-400">Referral Name</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       placeholder="Jane Doe"
-                      value={referralName} 
+                      value={referralName}
                       onChange={(e) => setReferralName(e.target.value)}
                       className="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-primary"
                     />
                   </div>
                   <div className="space-y-1">
                     <label className="text-[11px] font-semibold text-gray-400">Referral Email</label>
-                    <input 
-                      type="email" 
+                    <input
+                      type="email"
                       placeholder="jane.doe@company.com"
-                      value={referralEmail} 
+                      value={referralEmail}
                       onChange={(e) => setReferralEmail(e.target.value)}
                       className="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-primary"
                     />
@@ -387,7 +386,7 @@ export default function JobApplicationWizard({
             </div>
 
             <div className="flex justify-end pt-4 border-t border-border">
-              <button 
+              <button
                 onClick={handleNextStep1}
                 className="bg-primary hover:bg-primary/90 text-white font-semibold py-2 px-5 rounded-xl text-xs flex items-center gap-1.5 shadow-md shadow-primary-glow"
               >
@@ -412,7 +411,7 @@ export default function JobApplicationWizard({
             {loading ? (
               <div className="py-8 flex flex-col items-center justify-center border border-primary/20 rounded-2xl bg-background/40 relative min-h-[220px] overflow-hidden space-y-5">
                 <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-secondary/5 to-primary/5 animate-pulse" />
-                
+
                 {/* Radar/Alignment Scanner Graphic */}
                 <div className="relative flex items-center justify-center h-16 w-16">
                   {/* Outer breathing ring */}
@@ -443,11 +442,11 @@ export default function JobApplicationWizard({
               </div>
             ) : (
               <div className="py-6 flex flex-col items-center justify-center border-2 border-dashed border-border rounded-2xl bg-background/50 hover:bg-background transition-all group relative min-h-[220px]">
-                <input 
-                  type="file" 
-                  accept=".pdf,.docx,.txt" 
-                  className="absolute inset-0 opacity-0 cursor-pointer" 
-                  onChange={handleFileUpload} 
+                <input
+                  type="file"
+                  accept=".pdf,.docx,.txt"
+                  className="absolute inset-0 opacity-0 cursor-pointer"
+                  onChange={handleFileUpload}
                   disabled={loading}
                 />
                 <div className="flex flex-col items-center text-center space-y-3 p-4">
@@ -472,7 +471,7 @@ export default function JobApplicationWizard({
             )}
 
             <div className="flex justify-between pt-4 border-t border-border">
-              <button 
+              <button
                 onClick={() => setStep(1)}
                 className="bg-background hover:bg-background/80 text-gray-300 border border-border font-semibold py-2 px-5 rounded-xl text-xs flex items-center gap-1.5"
                 disabled={loading}
@@ -480,7 +479,7 @@ export default function JobApplicationWizard({
                 <ArrowLeft className="h-3.5 w-3.5" />
                 <span>Back</span>
               </button>
-              <button 
+              <button
                 onClick={handleEvaluate}
                 disabled={loading || !resumeFile}
                 className="bg-gradient-to-r from-primary to-secondary hover:opacity-90 disabled:opacity-50 text-white font-semibold py-2 px-6 rounded-xl text-xs flex items-center gap-1.5 shadow-md shadow-primary-glow"
@@ -488,12 +487,12 @@ export default function JobApplicationWizard({
                 {loading ? (
                   <>
                     <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-                    <span>Evaluating alignment...</span>
+                    <span>Evaluating resume...</span>
                   </>
                 ) : (
                   <>
                     <Award className="h-3.5 w-3.5" />
-                    <span>Run Alignment Check</span>
+                    <span>Evaluate Resume</span>
                   </>
                 )}
               </button>
@@ -512,9 +511,8 @@ export default function JobApplicationWizard({
                 </h2>
                 <p className="text-xs text-gray-400">Your layout alignment score generated by Ollama.</p>
               </div>
-              <span className={`px-2 py-0.5 rounded-full font-bold uppercase text-[9px] ${
-                selectedApp.status === 'APPLIED' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'
-              }`}>
+              <span className={`px-2 py-0.5 rounded-full font-bold uppercase text-[9px] ${selectedApp.status === 'APPLIED' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'
+                }`}>
                 {selectedApp.status}
               </span>
             </div>
@@ -522,12 +520,10 @@ export default function JobApplicationWizard({
             <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
               {/* Score Indicator */}
               <div className="md:col-span-4 flex flex-col items-center justify-center p-4 bg-background/50 border border-border rounded-2xl relative min-h-[160px]">
-                <div className={`relative h-24 w-24 rounded-full border-4 flex flex-col items-center justify-center ${
-                  selectedApp.matchScore >= 70 ? 'border-emerald-500/30' : 'border-amber-500/30'
-                }`}>
-                  <span className={`text-2xl font-bold ${
-                    selectedApp.matchScore >= 70 ? 'text-emerald-400' : 'text-amber-400'
+                <div className={`relative h-24 w-24 rounded-full border-4 flex flex-col items-center justify-center ${selectedApp.matchScore >= 70 ? 'border-emerald-500/30' : 'border-amber-500/30'
                   }`}>
+                  <span className={`text-2xl font-bold ${selectedApp.matchScore >= 70 ? 'text-emerald-400' : 'text-amber-400'
+                    }`}>
                     {selectedApp.matchScore.toFixed(0)}%
                   </span>
                   <span className="text-[9px] text-gray-500">Match score</span>
@@ -548,7 +544,7 @@ export default function JobApplicationWizard({
                     Your resume has been parsed and reviewed. A match score of {selectedApp.matchScore.toFixed(1)}% indicates the keyword alignment. See the recommendations on the next step to optimize details.
                   </p>
                 </div>
-                
+
                 <div className="flex gap-4 text-xs">
                   <div>
                     <span className="text-gray-500">Suggestions:</span>
@@ -569,9 +565,8 @@ export default function JobApplicationWizard({
                 {selectedApp.suggestions?.map((sug) => (
                   <div key={sug.id} className="p-3 bg-background/40 border border-border rounded-xl space-y-1.5 hover:border-primary/30 transition-all">
                     <div className="flex justify-between items-center">
-                      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider ${
-                        sug.type === 'ADD' ? 'bg-primary/20 text-primary' : 'bg-secondary/20 text-secondary'
-                      }`}>
+                      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider ${sug.type === 'ADD' ? 'bg-primary/20 text-primary' : 'bg-secondary/20 text-secondary'
+                        }`}>
                         {sug.type}
                       </span>
                       <span className="text-[10px] text-gray-500">Section: {sug.regionId.replace('sec_', '')}</span>
@@ -584,7 +579,7 @@ export default function JobApplicationWizard({
             </div>
 
             <div className="flex justify-end pt-4 border-t border-border">
-              <button 
+              <button
                 onClick={() => setStep(4)}
                 className="bg-primary hover:bg-primary/90 text-white font-semibold py-2 px-6 rounded-xl text-xs flex items-center gap-1.5 shadow-md shadow-primary-glow"
               >
@@ -606,7 +601,7 @@ export default function JobApplicationWizard({
                 </h2>
                 <p className="text-xs text-gray-400">Edit sections and apply AI suggestions directly before compiling.</p>
               </div>
-              <button 
+              <button
                 onClick={async () => {
                   await handleSaveResume();
                   setStep(5);
@@ -619,7 +614,7 @@ export default function JobApplicationWizard({
             </div>
 
             <div className="h-[460px] overflow-hidden">
-              <AlignmentEditor 
+              <AlignmentEditor
                 selectedApp={selectedApp}
                 structuredData={structuredData}
                 setStructuredData={setStructuredData}
@@ -646,21 +641,21 @@ export default function JobApplicationWizard({
                 <p className="text-xs text-gray-400">Download your compiled resume PDF and track the application status.</p>
               </div>
               <div className="flex space-x-2">
-                <button 
+                <button
                   onClick={() => setStep(4)}
                   className="bg-background hover:bg-background/80 text-gray-300 border border-border font-semibold py-2 px-4 rounded-xl text-xs flex items-center gap-1"
                 >
                   <ArrowLeft className="h-3.5 w-3.5" />
                   <span>Back to Editor</span>
                 </button>
-                <button 
+                <button
                   onClick={handleDownload}
                   className="bg-primary hover:bg-primary/90 text-white font-semibold py-2 px-5 rounded-xl text-xs flex items-center gap-1.5 shadow-md shadow-primary-glow"
                 >
                   <Download className="h-3.5 w-3.5" />
                   <span>Download PDF</span>
                 </button>
-                <button 
+                <button
                   onClick={() => setShowApplyModal(true)}
                   className="bg-background border border-border hover:bg-white/5 text-white font-semibold py-2 px-4 rounded-xl text-xs flex items-center gap-1"
                 >
@@ -671,7 +666,7 @@ export default function JobApplicationWizard({
             </div>
 
             <div className="h-[480px]">
-              <PdfPreview 
+              <PdfPreview
                 selectedApp={selectedApp}
                 pdfCacheBuster={pdfCacheBuster}
                 onApply={handleApply}
@@ -687,7 +682,7 @@ export default function JobApplicationWizard({
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
           <div className="bg-card border border-border rounded-2xl p-6 max-w-md w-full space-y-4 shadow-2xl relative overflow-hidden">
             <div className="glow-bg top-[-50px] right-[-50px] opacity-40"></div>
-            
+
             <div className="h-12 w-12 rounded-xl bg-gradient-to-tr from-emerald-500/20 to-teal-500/20 flex items-center justify-center border border-emerald-500/30 mx-auto">
               <CheckCircle className="h-6 w-6 text-emerald-400" />
             </div>
@@ -703,13 +698,13 @@ export default function JobApplicationWizard({
             </div>
 
             <div className="flex flex-col space-y-2 pt-2">
-              <button 
+              <button
                 onClick={() => handleAppliedConfirm(true)}
                 className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:opacity-95 text-white font-semibold py-2.5 rounded-xl text-xs shadow-md transition-all flex items-center justify-center space-x-1.5"
               >
                 <span>Yes, I have applied!</span>
               </button>
-              <button 
+              <button
                 onClick={() => handleAppliedConfirm(false)}
                 className="w-full bg-background hover:bg-background/80 text-gray-300 border border-border font-semibold py-2.5 rounded-xl text-xs transition-colors"
               >

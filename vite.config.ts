@@ -5,6 +5,13 @@ export default defineConfig({
   plugins: [remix()],
   server: {
     port: 3000,
-    host: "0.0.0.0"
+    host: "0.0.0.0",
+    watch: {
+      usePolling: true,
+    },
+    hmr: {
+      protocol: 'ws',
+      host: 'localhost',
+    }
   }
 });

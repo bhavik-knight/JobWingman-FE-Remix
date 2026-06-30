@@ -3,13 +3,13 @@
 @tailwind utilities;
 
 :root {
-  --background: #09090b;
-  --foreground: #f4f4f5;
-  --card: #18181b;
-  --border: #27272a;
-  --primary: #8b5cf6;
-  --primary-glow: rgba(139, 92, 246, 0.15);
-  --secondary: #ec4899;
+  --background: #1e1f29;
+  --foreground: #f8f8f2;
+  --card: #282a36;
+  --border: #44475a;
+  --primary: #bd93f9;
+  --primary-glow: rgba(189, 147, 249, 0.15);
+  --secondary: #ff79c6;
 }
 
 body {
@@ -36,7 +36,7 @@ body {
   position: absolute;
   width: 500px;
   height: 500px;
-  background: radial-gradient(circle, var(--primary-glow) 0%, rgba(9, 9, 11, 0) 70%);
+  background: radial-gradient(circle, var(--primary-glow) 0%, rgba(30, 31, 41, 0) 70%);
   filter: blur(40px);
   z-index: -1;
   pointer-events: none;
@@ -78,4 +78,49 @@ body {
   width: 100%;
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
   animation: shimmer 1.8s infinite linear;
+}
+
+/* Premium interactive form inputs, textareas, and selects */
+input[type="text"],
+input[type="email"],
+input[type="date"],
+input[type="url"],
+textarea,
+select {
+  border: 1px solid #44475a !important; /* clear Dracula border */
+  background-color: #1d1e26 !important; /* dark input surface */
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+input[type="text"]:hover,
+input[type="email"]:hover,
+input[type="date"]:hover,
+input[type="url"]:hover,
+textarea:hover,
+select:hover {
+  border-color: #6272a4 !important; /* Dracula selection/comment gray */
+  box-shadow: 0 0 8px rgba(189, 147, 249, 0.08);
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="date"]:focus,
+input[type="url"]:focus,
+textarea:focus,
+select:focus {
+  outline: none !important;
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 2px rgba(189, 147, 249, 0.2), 0 0 8px rgba(189, 147, 249, 0.15) !important;
+}
+
+/* Dashboard & general card borders and hovers */
+.bg-card {
+  border: 1px solid #44475a !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.bg-card:hover {
+  border-color: rgba(189, 147, 249, 0.4) !important;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.7), 0 0 15px rgba(189, 147, 249, 0.08);
+  transform: translateY(-2px);
 }

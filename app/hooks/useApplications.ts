@@ -1,4 +1,16 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '../store';
+import {
+  setApplications,
+  setSelectedApp,
+  setLoading,
+  setPdfCacheBuster,
+  setStructuredData,
+  setGatingError,
+  setWizardForm,
+  setResumeFile,
+} from '../store';
 
 export const API_BASE = 'http://localhost:5000';
 
@@ -65,57 +77,81 @@ export interface Application {
     title: string;
     company: string;
     rawText: string;
+    postingDate?: string;
+    deadline?: string;
+    url?: string;
+    referralName?: string;
+    referralEmail?: string;
   };
   suggestions?: Suggestion[];
 }
 
 export function useApplications() {
-  const [applications, setApplications] = useState<Application[]>([]);
-  const [selectedApp, setSelectedApp] = useState<Application | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [pdfCacheBuster, setPdfCacheBuster] = useState(Date.now());
-  const [structuredData, setStructuredData] = useState<StructuredResume>({
-    name: '',
-    email: '',
-    phone: '',
-    summary: [],
-    skills: [],
-    experience: [],
-    education: [],
-    volunteer: [],
-    projects: []
-  });
+  const dispatch = useDispatch();
+  const {
+    applications,
+    selectedApp,
+    loading,
+    pdfCacheBuster,
+    structuredData,
+    gatingError,
+    wizardForm,
+    resumeFileBase64,
+    resumeFileName
+  } = useSelector((state: RootState) => state.app);
 
-  const [gatingError, setGatingError] = useState<{
-    matchScore: number;
-    suggestions: any[];
-    error: string;
-  } | null>(null);
+  const setStructuredDataLocal = useCallback((data: StructuredResume | ((prev: StructuredResume) => StructuredResume)) => {
+    if (typeof data === 'function') {
+      dispatch(setStructuredData(data(structuredData)));
+    } else {
+      dispatch(setStructuredData(data));
+    }
+  }, [dispatch, structuredData]);
+
+  const setPdfCacheBusterLocal = useCallback((val: number | ((prev: number) => number)) => {
+    if (typeof val === 'function') {
+      dispatch(setPdfCacheBuster(val(pdfCacheBuster)));
+    } else {
+      dispatch(setPdfCacheBuster(val));
+    }
+  }, [dispatch, pdfCacheBuster]);
+
+  const setGatingErrorLocal = useCallback((val: any) => {
+    dispatch(setGatingError(val));
+  }, [dispatch]);
+
+  const setWizardFormLocal = useCallback((val: any) => {
+    dispatch(setWizardForm(val));
+  }, [dispatch]);
+
+  const setResumeFileLocal = useCallback((val: any) => {
+    dispatch(setResumeFile(val));
+  }, [dispatch]);
 
   const fetchApplications = useCallback(async () => {
     try {
       const res = await fetch(`${API_BASE}/api/applications`);
       if (res.ok) {
         const data = await res.json();
-        setApplications(data);
+        dispatch(setApplications(data));
         return data;
       }
     } catch (err) {
       console.error('Failed to fetch applications:', err);
     }
     return [];
-  }, []);
+  }, [dispatch]);
 
   const loadApplication = useCallback(async (id: string) => {
-    setLoading(true);
+    dispatch(setLoading(true));
     try {
       const res = await fetch(`${API_BASE}/api/applications/${id}`);
       if (res.ok) {
         const app = await res.json();
-        setSelectedApp(app);
+        dispatch(setSelectedApp(app));
         if (app.resume && app.resume.structuredData) {
           const sd = app.resume.structuredData;
-          setStructuredData({
+          dispatch(setStructuredData({
             name: sd.name || '',
             email: sd.email || '',
             phone: sd.phone || '',
@@ -143,45 +179,64 @@ export function useApplications() {
               context: proj.context || '',
               bullets: Array.isArray(proj.bullets) ? proj.bullets : (proj.bullets ? [proj.bullets] : [])
             }))
-          });
+          }));
         }
-        setPdfCacheBuster(Date.now());
+        dispatch(setPdfCacheBuster(Date.now()));
+        
+        // Auto populate wizard form from selected app
+        dispatch(setWizardForm({
+          jobTitle: app.jobDescription?.title || '',
+          company: app.jobDescription?.company || '',
+          jobDescription: app.jobDescription?.rawText || '',
+          jobPostingDate: app.jobDescription?.postingDate ? new Date(app.jobDescription.postingDate).toISOString().split('T')[0] : '',
+          deadline: app.jobDescription?.deadline ? new Date(app.jobDescription.deadline).toISOString().split('T')[0] : '',
+          jobLink: app.jobDescription?.url || '',
+          referralName: app.jobDescription?.referralName || '',
+          referralEmail: app.jobDescription?.referralEmail || ''
+        }));
       }
     } catch (err) {
       console.error('Failed to load application details:', err);
     } finally {
-      setLoading(false);
+      dispatch(setLoading(false));
     }
-  }, []);
+  }, [dispatch]);
 
   const handleRunEvaluation = async (
     file: File,
-    jobTitle: string,
-    company: string,
-    jobDescription: string,
+    jobTitle?: string,
+    company?: string,
+    jobDescription?: string,
     jobPostingDate?: string,
     deadline?: string,
     jobLink?: string,
     referralName?: string,
     referralEmail?: string
   ) => {
-    setLoading(true);
-    setGatingError(null);
+    dispatch(setLoading(true));
+    dispatch(setGatingError(null));
     const formData = new FormData();
     formData.append('resume', file);
-    formData.append('title', jobTitle || 'Position');
-    formData.append('company', company || 'Company');
-    formData.append('jobDescriptionText', jobDescription);
+
+    const finalTitle = jobTitle || (wizardForm as any).title || (wizardForm as any).jobTitle || 'Position';
+    const finalCompany = company || (wizardForm as any).company || 'Company';
+    const finalDesc = jobDescription || (wizardForm as any).rawText || (wizardForm as any).jobDescription || '';
+    const finalPostingDate = jobPostingDate || (wizardForm as any).postingDate || (wizardForm as any).jobPostingDate || '';
+    const finalDeadline = deadline || (wizardForm as any).deadline || '';
+    const finalJobLink = jobLink || (wizardForm as any).url || (wizardForm as any).jobLink || '';
+
+    formData.append('title', finalTitle);
+    formData.append('company', finalCompany);
+    formData.append('jobDescriptionText', finalDesc);
     formData.append('email', 'guest@jobwingman.local');
-    if (jobPostingDate) formData.append('jobPostingDate', jobPostingDate);
-    if (deadline) formData.append('deadline', deadline);
-    if (jobLink) formData.append('jobLink', jobLink);
+    if (finalPostingDate) formData.append('jobPostingDate', finalPostingDate);
+    if (finalDeadline) formData.append('deadline', finalDeadline);
+    if (finalJobLink) formData.append('jobLink', finalJobLink);
     if (referralName) formData.append('referralName', referralName);
     if (referralEmail) formData.append('referralEmail', referralEmail);
 
     try {
-      // Post directly to Remix action gateway at root "/?index"
-      const res = await fetch("/?index", {
+      const res = await fetch(`http://localhost:5000/api/applications`, {
         method: 'POST',
         body: formData
       });
@@ -192,11 +247,11 @@ export function useApplications() {
         return newApp;
       } else if (res.status === 422) {
         const errData = await res.json();
-        setGatingError({
+        dispatch(setGatingError({
           matchScore: errData.matchScore || 0,
           suggestions: errData.suggestions || [],
           error: errData.error || 'Match score below 70%'
-        });
+        }));
       } else {
         const errData = await res.json();
         alert(`Failed to evaluate application: ${errData.error || 'Unknown error'}`);
@@ -205,14 +260,14 @@ export function useApplications() {
       console.error('Error during alignment evaluation:', err);
       alert('Network error connecting to Remix action gateway.');
     } finally {
-      setLoading(false);
+      dispatch(setLoading(false));
     }
     return null;
   };
 
   const handleSaveResume = async () => {
     if (!selectedApp || !selectedApp.resume) return;
-    setLoading(true);
+    dispatch(setLoading(true));
     try {
       const res = await fetch(`${API_BASE}/api/resumes/${selectedApp.resume.id}`, {
         method: 'PUT',
@@ -220,7 +275,7 @@ export function useApplications() {
         body: JSON.stringify({ structuredData })
       });
       if (res.ok) {
-        setPdfCacheBuster(Date.now());
+        dispatch(setPdfCacheBuster(Date.now()));
         await loadApplication(selectedApp.id);
       } else {
         alert('Failed to save resume structured JSON data.');
@@ -228,7 +283,7 @@ export function useApplications() {
     } catch (err) {
       console.error('Error saving structured resume:', err);
     } finally {
-      setLoading(false);
+      dispatch(setLoading(false));
     }
   };
 
@@ -280,7 +335,7 @@ export function useApplications() {
       }
     }
 
-    setStructuredData(updated);
+    dispatch(setStructuredData(updated));
 
     try {
       const res = await fetch(`${API_BASE}/api/resumes/${selectedApp.resume.id}`, {
@@ -289,11 +344,11 @@ export function useApplications() {
         body: JSON.stringify({ structuredData: updated })
       });
       if (res.ok) {
-        setSelectedApp({
+        dispatch(setSelectedApp({
           ...selectedApp,
           suggestions: selectedApp.suggestions?.map(s => s.id === sug.id ? { ...s, resolved: true } : s)
-        });
-        setPdfCacheBuster(Date.now());
+        }));
+        dispatch(setPdfCacheBuster(Date.now()));
       }
     } catch (err) {
       console.error('Error committing suggestion:', err);
@@ -325,7 +380,7 @@ export function useApplications() {
   };
 
   const handleUpdateApplication = async (id: string, updates: { status?: string; appliedAt?: string; downloadedAt?: string }) => {
-    setLoading(true);
+    dispatch(setLoading(true));
     try {
       const res = await fetch(`${API_BASE}/api/applications/${id}`, {
         method: 'PUT',
@@ -335,7 +390,7 @@ export function useApplications() {
       if (res.ok) {
         const updatedApp = await res.json();
         if (selectedApp && selectedApp.id === id) {
-          setSelectedApp(updatedApp);
+          dispatch(setSelectedApp(updatedApp));
         }
         await fetchApplications();
         return updatedApp;
@@ -343,9 +398,38 @@ export function useApplications() {
     } catch (err) {
       console.error('Error updating application:', err);
     } finally {
-      setLoading(false);
+      dispatch(setLoading(false));
     }
     return null;
+  };
+
+  const handleSendEmail = async (applicationId: string, to: string, subject: string, body: string) => {
+    try {
+      const response = await fetch(`${API_BASE}/api/applications/${applicationId}/send-email`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ to, subject, body }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Failed to dispatch email over local network channels.');
+      }
+
+      alert("Success! Follow-up email left your local machine successfully.");
+      return true;
+    } catch (error: any) {
+      console.error("Frontend email trigger crashed:", error);
+      alert(`Mail Error: ${error.message}`);
+      return false;
+    }
+  };
+
+  const handleSaveJobDetails = (values: any) => {
+    dispatch(setWizardForm(values));
   };
 
   return {
@@ -353,9 +437,9 @@ export function useApplications() {
     selectedApp,
     loading,
     structuredData,
-    setStructuredData,
+    setStructuredData: setStructuredDataLocal,
     pdfCacheBuster,
-    setPdfCacheBuster,
+    setPdfCacheBuster: setPdfCacheBusterLocal,
     fetchApplications,
     loadApplication,
     handleRunEvaluation,
@@ -363,7 +447,14 @@ export function useApplications() {
     handleCommitSuggestion,
     handleApply,
     handleUpdateApplication,
+    handleSendEmail,
+    handleSaveJobDetails,
     gatingError,
-    setGatingError
+    setGatingError: setGatingErrorLocal,
+    wizardForm,
+    setWizardForm: setWizardFormLocal,
+    resumeFileBase64,
+    resumeFileName,
+    setResumeFile: setResumeFileLocal
   };
 }
