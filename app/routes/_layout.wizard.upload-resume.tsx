@@ -57,6 +57,7 @@ export default function UploadResume() {
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [evaluationError, setEvaluationError] = useState<string | null>(null);
   const [simulatedStep, setSimulatedStep] = useState(0);
+  const [modelProvider, setModelProvider] = useState<'gemini' | 'ollama'>('gemini');
 
   useEffect(() => {
     const isStep1Complete = !!(
@@ -109,7 +110,8 @@ export default function UploadResume() {
       wizardForm.deadline || undefined,
       wizardForm.jobLink || undefined,
       wizardForm.referralName || undefined,
-      wizardForm.referralEmail || undefined
+      wizardForm.referralEmail || undefined,
+      modelProvider
     );
     if (newApp) {
       navigate('/wizard/align-score');
@@ -253,32 +255,50 @@ export default function UploadResume() {
         </div>
       )}
 
-      <div className="flex justify-between pt-4 border-t border-border">
-        <button
-          onClick={() => navigate('/wizard/job-details')}
-          className="bg-background hover:bg-background/80 text-gray-300 border border-border font-semibold py-2 px-5 rounded-xl text-xs flex items-center gap-1.5"
-          disabled={loading}
-        >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          <span>Back</span>
-        </button>
-        <button
-          onClick={handleEvaluate}
-          disabled={loading || !resumeFile}
-          className="bg-gradient-to-r from-primary to-secondary hover:opacity-90 disabled:opacity-50 text-white font-semibold py-2 px-6 rounded-xl text-xs flex items-center gap-1.5 shadow-md shadow-primary-glow"
-        >
-          {loading ? (
-            <>
-              <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-              <span>Evaluating resume...</span>
-            </>
-          ) : (
-            <>
-              <Award className="h-3.5 w-3.5" />
-              <span>Evaluate Resume</span>
-            </>
-          )}
-        </button>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-4 border-t border-border">
+        <div className="flex items-center gap-2">
+          <label htmlFor="model-selector" className="text-xs font-semibold text-zinc-300">
+            Evaluation Model:
+          </label>
+          <select
+            id="model-selector"
+            value={modelProvider}
+            onChange={(e) => setModelProvider(e.target.value as 'gemini' | 'ollama')}
+            className="bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-1.5 text-xs text-zinc-200 font-medium focus:outline-none focus:border-primary/50 transition-colors"
+            disabled={loading}
+          >
+            <option value="gemini">Google Gemini (Default)</option>
+            <option value="ollama">Local Qwen3-Coder (Ollama)</option>
+          </select>
+        </div>
+
+        <div className="flex justify-between sm:justify-end gap-3 flex-grow sm:flex-grow-0">
+          <button
+            onClick={() => navigate('/wizard/job-details')}
+            className="bg-background hover:bg-background/80 text-gray-300 border border-border font-semibold py-2 px-5 rounded-xl text-xs flex items-center gap-1.5"
+            disabled={loading}
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            <span>Back</span>
+          </button>
+          <button
+            onClick={handleEvaluate}
+            disabled={loading || !resumeFile}
+            className="bg-gradient-to-r from-primary to-secondary hover:opacity-90 disabled:opacity-50 text-white font-semibold py-2 px-6 rounded-xl text-xs flex items-center gap-1.5 shadow-md shadow-primary-glow"
+          >
+            {loading ? (
+              <>
+                <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                <span>Evaluating resume...</span>
+              </>
+            ) : (
+              <>
+                <Award className="h-3.5 w-3.5" />
+                <span>Evaluate Resume</span>
+              </>
+            )}
+          </button>
+        </div>
       </div>
     </div>
   );

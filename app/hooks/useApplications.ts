@@ -211,7 +211,8 @@ export function useApplications() {
     deadline?: string,
     jobLink?: string,
     referralName?: string,
-    referralEmail?: string
+    referralEmail?: string,
+    modelProvider?: 'gemini' | 'ollama'
   ) => {
     dispatch(setLoading(true));
     dispatch(setGatingError(null));
@@ -229,6 +230,7 @@ export function useApplications() {
     formData.append('company', finalCompany);
     formData.append('jobDescriptionText', finalDesc);
     formData.append('email', 'guest@jobwingman.local');
+    formData.append('modelProvider', modelProvider || 'gemini');
     if (finalPostingDate) formData.append('jobPostingDate', finalPostingDate);
     if (finalDeadline) formData.append('deadline', finalDeadline);
     if (finalJobLink) formData.append('jobLink', finalJobLink);
