@@ -11,80 +11,7 @@ import {
   setWizardForm,
   setResumeFile,
 } from '../store';
-
-export const API_BASE = 'http://localhost:5000';
-
-export interface Suggestion {
-  id: string;
-  regionId: string;
-  regionText: string;
-  type: 'ADD' | 'EXPAND' | 'CLARIFY';
-  content: string;
-  rationale: string;
-  resolved: boolean;
-}
-
-export interface Experience {
-  company: string;
-  role: string;
-  duration: string;
-  description: string[];
-}
-
-export interface Education {
-  school: string;
-  degree?: string;
-  year?: string;
-}
-
-export interface SkillCategory {
-  category: string;
-  items: string[];
-}
-
-export interface ProjectItem {
-  title: string;
-  context?: string;
-  bullets: string[];
-}
-
-export interface StructuredResume {
-  name: string;
-  email: string;
-  phone: string;
-  summary: string[];
-  skills: SkillCategory[];
-  experience: Experience[];
-  education: Education[];
-  volunteer: Experience[];
-  projects: ProjectItem[];
-}
-
-export interface Application {
-  id: string;
-  createdAt: string;
-  status: 'DRAFT' | 'APPLIED';
-  matchScore: number;
-  gatingFlag: boolean;
-  optInAutoSend: boolean;
-  resume?: {
-    id: string;
-    filePath: string;
-    parsedText: string;
-    structuredData: StructuredResume;
-  };
-  jobDescription?: {
-    title: string;
-    company: string;
-    rawText: string;
-    postingDate?: string;
-    deadline?: string;
-    url?: string;
-    referralName?: string;
-    referralEmail?: string;
-  };
-  suggestions?: Suggestion[];
-}
+import { apiService, StructuredResume, Suggestion } from '../services/api';
 
 export function useApplications() {
   const dispatch = useDispatch();
@@ -130,12 +57,9 @@ export function useApplications() {
 
   const fetchApplications = useCallback(async () => {
     try {
-      const res = await fetch(`${API_BASE}/api/applications`);
-      if (res.ok) {
-        const data = await res.json();
-        dispatch(setApplications(data));
-        return data;
-      }
+      const data = await apiService.getApplications();
+      dispatch(setApplications(data));
+      return data;
     } catch (err) {
       console.error('Failed to fetch applications:', err);
     }
@@ -145,56 +69,53 @@ export function useApplications() {
   const loadApplication = useCallback(async (id: string) => {
     dispatch(setLoading(true));
     try {
-      const res = await fetch(`${API_BASE}/api/applications/${id}`);
-      if (res.ok) {
-        const app = await res.json();
-        dispatch(setSelectedApp(app));
-        if (app.resume && app.resume.structuredData) {
-          const sd = app.resume.structuredData;
-          dispatch(setStructuredData({
-            name: sd.name || '',
-            email: sd.email || '',
-            phone: sd.phone || '',
-            summary: Array.isArray(sd.summary) ? sd.summary : (sd.summary ? [sd.summary] : []),
-            skills: Array.isArray(sd.skills) ? (
-              sd.skills.length > 0 && typeof sd.skills[0] === 'object'
-                ? sd.skills
-                : [{ category: 'Technical Skills', items: sd.skills }]
-            ) : [],
-            experience: (sd.experience || []).map((exp: any) => ({
-              company: exp.company || '',
-              role: exp.role || '',
-              duration: exp.duration || '',
-              description: Array.isArray(exp.description) ? exp.description : (exp.description ? [exp.description] : [])
-            })),
-            education: sd.education || [],
-            volunteer: (sd.volunteer || []).map((vol: any) => ({
-              company: vol.company || '',
-              role: vol.role || '',
-              duration: vol.duration || '',
-              description: Array.isArray(vol.description) ? vol.description : (vol.description ? [vol.description] : [])
-            })),
-            projects: (sd.projects || []).map((proj: any) => ({
-              title: proj.title || '',
-              context: proj.context || '',
-              bullets: Array.isArray(proj.bullets) ? proj.bullets : (proj.bullets ? [proj.bullets] : [])
-            }))
-          }));
-        }
-        dispatch(setPdfCacheBuster(Date.now()));
-        
-        // Auto populate wizard form from selected app
-        dispatch(setWizardForm({
-          jobTitle: app.jobDescription?.title || '',
-          company: app.jobDescription?.company || '',
-          jobDescription: app.jobDescription?.rawText || '',
-          jobPostingDate: app.jobDescription?.postingDate ? new Date(app.jobDescription.postingDate).toISOString().split('T')[0] : '',
-          deadline: app.jobDescription?.deadline ? new Date(app.jobDescription.deadline).toISOString().split('T')[0] : '',
-          jobLink: app.jobDescription?.url || '',
-          referralName: app.jobDescription?.referralName || '',
-          referralEmail: app.jobDescription?.referralEmail || ''
+      const app = await apiService.getApplication(id);
+      dispatch(setSelectedApp(app));
+      if (app.resume && app.resume.structuredData) {
+        const sd = app.resume.structuredData;
+        dispatch(setStructuredData({
+          name: sd.name || '',
+          email: sd.email || '',
+          phone: sd.phone || '',
+          summary: Array.isArray(sd.summary) ? sd.summary : (sd.summary ? [sd.summary] : []),
+          skills: Array.isArray(sd.skills) ? (
+            sd.skills.length > 0 && typeof sd.skills[0] === 'object'
+              ? sd.skills
+              : [{ category: 'Technical Skills', items: sd.skills }]
+          ) : [],
+          experience: (sd.experience || []).map((exp: any) => ({
+            company: exp.company || '',
+            role: exp.role || '',
+            duration: exp.duration || '',
+            description: Array.isArray(exp.description) ? exp.description : (exp.description ? [exp.description] : [])
+          })),
+          education: sd.education || [],
+          volunteer: (sd.volunteer || []).map((vol: any) => ({
+            company: vol.company || '',
+            role: vol.role || '',
+            duration: vol.duration || '',
+            description: Array.isArray(vol.description) ? vol.description : (vol.description ? [vol.description] : [])
+          })),
+          projects: (sd.projects || []).map((proj: any) => ({
+            title: proj.title || '',
+            context: proj.context || '',
+            bullets: Array.isArray(proj.bullets) ? proj.bullets : (proj.bullets ? [proj.bullets] : [])
+          }))
         }));
       }
+      dispatch(setPdfCacheBuster(Date.now()));
+      
+      // Auto populate wizard form from selected app
+      dispatch(setWizardForm({
+        jobTitle: app.jobDescription?.title || '',
+        company: app.jobDescription?.company || '',
+        jobDescription: app.jobDescription?.rawText || '',
+        jobPostingDate: app.jobDescription?.postingDate ? new Date(app.jobDescription.postingDate).toISOString().split('T')[0] : '',
+        deadline: app.jobDescription?.deadline ? new Date(app.jobDescription.deadline).toISOString().split('T')[0] : '',
+        jobLink: app.jobDescription?.url || '',
+        referralName: app.jobDescription?.referralName || '',
+        referralEmail: app.jobDescription?.referralEmail || ''
+      }));
     } catch (err) {
       console.error('Failed to load application details:', err);
     } finally {
@@ -238,29 +159,21 @@ export function useApplications() {
     if (referralEmail) formData.append('referralEmail', referralEmail);
 
     try {
-      const res = await fetch(`http://localhost:5000/api/applications`, {
-        method: 'POST',
-        body: formData
-      });
-      if (res.ok) {
-        const newApp = await res.json();
-        await fetchApplications();
-        await loadApplication(newApp.id);
-        return newApp;
-      } else if (res.status === 422) {
-        const errData = await res.json();
+      const newApp = await apiService.runEvaluation(formData);
+      await fetchApplications();
+      await loadApplication(newApp.id);
+      return newApp;
+    } catch (err: any) {
+      if (err && err.status === 422) {
         dispatch(setGatingError({
-          matchScore: errData.matchScore || 0,
-          suggestions: errData.suggestions || [],
-          error: errData.error || 'Match score below 70%'
+          matchScore: err.data.matchScore || 0,
+          suggestions: err.data.suggestions || [],
+          error: err.data.error || 'Match score below 70%'
         }));
       } else {
-        const errData = await res.json();
-        alert(`Failed to evaluate application: ${errData.error || 'Unknown error'}`);
+        console.error('Error during alignment evaluation:', err);
+        alert(`Failed to evaluate application: ${err.message || 'Unknown error'}`);
       }
-    } catch (err) {
-      console.error('Error during alignment evaluation:', err);
-      alert('Network error connecting to Remix action gateway.');
     } finally {
       dispatch(setLoading(false));
     }
@@ -271,19 +184,12 @@ export function useApplications() {
     if (!selectedApp || !selectedApp.resume) return;
     dispatch(setLoading(true));
     try {
-      const res = await fetch(`${API_BASE}/api/resumes/${selectedApp.resume.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ structuredData })
-      });
-      if (res.ok) {
-        dispatch(setPdfCacheBuster(Date.now()));
-        await loadApplication(selectedApp.id);
-      } else {
-        alert('Failed to save resume structured JSON data.');
-      }
+      await apiService.saveResume(selectedApp.resume.id, structuredData);
+      dispatch(setPdfCacheBuster(Date.now()));
+      await loadApplication(selectedApp.id);
     } catch (err) {
       console.error('Error saving structured resume:', err);
+      alert('Failed to save resume structured JSON data.');
     } finally {
       dispatch(setLoading(false));
     }
@@ -340,18 +246,12 @@ export function useApplications() {
     dispatch(setStructuredData(updated));
 
     try {
-      const res = await fetch(`${API_BASE}/api/resumes/${selectedApp.resume.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ structuredData: updated })
-      });
-      if (res.ok) {
-        dispatch(setSelectedApp({
-          ...selectedApp,
-          suggestions: selectedApp.suggestions?.map(s => s.id === sug.id ? { ...s, resolved: true } : s)
-        }));
-        dispatch(setPdfCacheBuster(Date.now()));
-      }
+      await apiService.saveResume(selectedApp.resume.id, updated);
+      dispatch(setSelectedApp({
+        ...selectedApp,
+        suggestions: selectedApp.suggestions?.map(s => s.id === sug.id ? { ...s, resolved: true } : s)
+      }));
+      dispatch(setPdfCacheBuster(Date.now()));
     } catch (err) {
       console.error('Error committing suggestion:', err);
     }
@@ -360,23 +260,14 @@ export function useApplications() {
   const handleApply = async (bypassGate: boolean) => {
     if (!selectedApp) return false;
     try {
-      const res = await fetch(`${API_BASE}/api/applications/${selectedApp.id}/apply`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ bypassGate })
-      });
-      if (res.ok) {
-        const data = await res.json();
-        alert(data.message);
-        await loadApplication(selectedApp.id);
-        await fetchApplications();
-        return true;
-      } else {
-        const errData = await res.json();
-        alert(errData.error || 'Failed to submit application.');
-      }
-    } catch (err) {
+      const data = await apiService.apply(selectedApp.id, bypassGate);
+      alert(data.message);
+      await loadApplication(selectedApp.id);
+      await fetchApplications();
+      return true;
+    } catch (err: any) {
       console.error('Error marking as applied:', err);
+      alert(err.message || 'Failed to submit application.');
     }
     return false;
   };
@@ -384,19 +275,12 @@ export function useApplications() {
   const handleUpdateApplication = async (id: string, updates: { status?: string; appliedAt?: string; downloadedAt?: string }) => {
     dispatch(setLoading(true));
     try {
-      const res = await fetch(`${API_BASE}/api/applications/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updates)
-      });
-      if (res.ok) {
-        const updatedApp = await res.json();
-        if (selectedApp && selectedApp.id === id) {
-          dispatch(setSelectedApp(updatedApp));
-        }
-        await fetchApplications();
-        return updatedApp;
+      const updatedApp = await apiService.updateApplication(id, updates);
+      if (selectedApp && selectedApp.id === id) {
+        dispatch(setSelectedApp(updatedApp));
       }
+      await fetchApplications();
+      return updatedApp;
     } catch (err) {
       console.error('Error updating application:', err);
     } finally {
@@ -407,20 +291,10 @@ export function useApplications() {
 
   const handleSendEmail = async (applicationId: string, to: string, subject: string, body: string) => {
     try {
-      const response = await fetch(`${API_BASE}/api/applications/${applicationId}/send-email`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ to, subject, body }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok || !data.success) {
-        throw new Error(data.error || 'Failed to dispatch email over local network channels.');
+      const data = await apiService.sendEmail(applicationId, to, subject, body);
+      if (!data.success) {
+        throw new Error('Failed to dispatch email over local network channels.');
       }
-
       alert("Success! Follow-up email left your local machine successfully.");
       return true;
     } catch (error: any) {
@@ -460,3 +334,4 @@ export function useApplications() {
     setResumeFile: setResumeFileLocal
   };
 }
+

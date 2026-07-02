@@ -4,15 +4,14 @@ import { Sparkles, Briefcase, Bell } from 'lucide-react';
 import DashboardHeader from '../components/DashboardHeader';
 import { useDispatch } from 'react-redux';
 import { setApplications } from '../store';
-import { API_BASE } from '../hooks/useApplications';
+import { apiService } from '../services/api';
 
 export default function AppLayout() {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    // Fetch apps on mount
-    fetch(`${API_BASE}/api/applications`)
-      .then(res => res.json())
+    // Fetch apps on mount using centralized apiService
+    apiService.getApplications()
       .then(data => {
         dispatch(setApplications(data));
       })
@@ -76,13 +75,14 @@ export default function AppLayout() {
               </NavLink>
             </nav>
           </aside>
+ 
+           {/* Main Content */}
+           <main className="flex-grow min-w-0 z-10 w-full">
+             <Outlet />
+           </main>
+         </div>
+       </div>
+     </div>
+   );
+ }
 
-          {/* Main Content */}
-          <main className="flex-grow min-w-0 z-10 w-full">
-            <Outlet />
-          </main>
-        </div>
-      </div>
-    </div>
-  );
-}
